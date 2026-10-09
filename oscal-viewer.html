@@ -1,0 +1,317 @@
+<!--
+  SPDX-License-Identifier: GPL-3.0-or-later
+  OSCAL-Viewer — BSI-Stand-der-Technik-Kernel
+  Copyright (C) 2026 Christian
+
+  This program is free software: you can redistribute it and/or modify it
+  under the terms of the GNU General Public License as published by the
+  Free Software Foundation, either version 3 of the License, or (at your
+  option) any later version.
+
+  This program is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+  more details.
+
+  You should have received a copy of the GNU General Public License along
+  with this program. If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
+-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OSCAL-Viewer — BSI-Stand-der-Technik-Kernel</title>
+<style>
+  :root{
+    --bg:#fff; --fg:#1a1a1a; --muted:#666; --border:#d8d8d8; --accent:#005a9c;
+    --chip-bg:#eef3f7; --hover:#f4f7fa; --code:#f5f5f5; --muss:#b3261e;
+  }
+  :root.dark{
+    --bg:#16181d; --fg:#e2e4e9; --muted:#9aa0aa; --border:#3a3f47;
+    --accent:#6cb2e5; --chip-bg:#232933; --hover:#1d2128; --code:#1e2228; --muss:#ef8080;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not(.light){
+      --bg:#16181d; --fg:#e2e4e9; --muted:#9aa0aa; --border:#3a3f47;
+      --accent:#6cb2e5; --chip-bg:#232933; --hover:#1d2128; --code:#1e2228; --muss:#ef8080;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.55 Georgia,serif;background:var(--bg);color:var(--fg)}
+  header{border-bottom:1px solid var(--border);padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  header h1{font-size:1.1rem;margin:0;flex:1 1 auto}
+  header .meta{color:var(--muted);font-size:.8rem;font-family:system-ui,sans-serif}
+  #themeBtn{border:1px solid var(--border);background:var(--bg);color:var(--fg);border-radius:5px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex:0 0 auto}
+  #themeBtn:hover{background:var(--hover)}
+  #themeBtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  #themeBtn .ico-moon{display:none}
+  :root.dark #themeBtn .ico-moon{display:block}
+  :root.dark #themeBtn .ico-sun{display:none}
+  #loadBtn{border:1px solid var(--accent);color:var(--accent);border-radius:5px;padding:6px 12px;cursor:pointer;font-family:system-ui,sans-serif;font-size:.8rem;flex:0 0 auto}
+  #loadBtn:hover{background:var(--hover)}
+  main{max-width:960px;margin:0 auto;padding:16px 20px 80px}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;align-items:center}
+  .controls input[type=search]{flex:1 1 260px;padding:8px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;font-size:.95rem}
+  .controls label{font-family:system-ui,sans-serif;font-size:.85rem;display:flex;gap:4px;align-items:center;color:var(--muted)}
+  fieldset{border:1px solid var(--border);border-radius:6px;margin:0;padding:8px 12px;display:flex;flex-wrap:wrap;gap:4px 14px}
+  legend{font-family:system-ui,sans-serif;font-size:.8rem;color:var(--muted);padding:0 6px}
+  fieldset label{font-family:system-ui,sans-serif;font-size:.85rem;display:inline-flex;gap:5px;align-items:center;white-space:nowrap}
+  fieldset input{accent-color:var(--accent)}
+  .count{font-family:system-ui,sans-serif;font-size:.85rem;color:var(--muted)}
+  .group{margin:22px 0}
+  .group > summary{cursor:pointer;font-size:1.15rem;font-weight:bold;font-family:system-ui,sans-serif;
+    padding:10px 12px;background:var(--chip-bg);border:1px solid var(--border);border-radius:6px;list-style:none;display:flex;justify-content:space-between;gap:10px}
+  .group > summary::-webkit-details-marker{display:none}
+  .group > summary .n{color:var(--muted);font-weight:normal;font-size:.85rem}
+  .prak{margin:12px 0 0}
+  .prak > summary{cursor:pointer;font-family:system-ui,sans-serif;font-size:.95rem;font-weight:600;padding:7px 10px;border-bottom:1px solid var(--border)}
+  .prak-list{margin:0 0 8px;padding:0;list-style:none}
+  .req{padding:8px 4px 10px 0;border-bottom:1px solid var(--border)}
+  .req:last-child{border-bottom:none}
+  .req .id{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;color:var(--accent)}
+  .req h4{margin:2px 0 6px;font-size:.98rem;font-weight:600}
+  .req p{margin:0;font-size:.95rem}
+  .chips{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-family:system-ui,sans-serif;font-size:.72rem;border:1px solid var(--border);border-radius:10px;padding:1px 8px;background:var(--chip-bg);color:var(--muted)}
+  .chip.erhöht{border-color:var(--accent);color:var(--accent)}
+  .chip.muss{border-color:var(--muss);color:var(--muss);font-weight:600}
+  .guidance{margin:8px 0 0;border-left:3px solid var(--border);padding:2px 0 2px 10px}
+  .guidance > summary{cursor:pointer;font-size:.8rem;color:var(--muted);font-family:system-ui,sans-serif}
+  .guidance > p{margin:6px 0 2px;font-size:.9rem;color:var(--fg)}
+  .empty{color:var(--muted);font-style:italic}
+  #drop{border:2px dashed var(--border);border-radius:8px;padding:36px 20px;text-align:center;color:var(--muted);font-family:system-ui,sans-serif;margin-top:10px}
+  #drop.over{border-color:var(--accent);color:var(--accent)}
+  #drop .btn{display:inline-block;border:1px solid var(--accent);color:var(--accent);border-radius:5px;padding:8px 16px;cursor:pointer;margin-top:12px}
+  #drop small{display:block;margin-top:6px;font-size:.75rem}
+  footer{border-top:1px solid var(--border);margin-top:40px;padding:12px 20px;color:var(--muted);font-family:system-ui,sans-serif;font-size:.75rem;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1>OSCAL-Viewer — BSI-Stand-der-Technik-Kernel</h1>
+  <span class="meta" id="meta"></span>
+  <button id="themeBtn" type="button" aria-label="Hell/Dunkel umschalten" title="Hell/Dunkel umschalten">
+    <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  </button>
+  <label class="btn" for="file" id="loadBtn" hidden>Andere JSON laden</label>
+  <input type="file" id="file" accept=".json,application/json" hidden>
+</header>
+<main>
+  <div id="intro">
+    <p>Katalog-JSON (OSCAL) auswählen — wird vollständig lokal im Browser gelesen, keine Netzwerkzugriffe.</p>
+    <div id="drop">
+      <span>JSON-Datei hierher ziehen oder</span>
+      <label class="btn" for="file">Datei auswählen</label>
+      <small>erwartet: OSCAL-Katalog mit catalog.groups[].groups[].controls[]</small>
+    </div>
+  </div>
+  <div id="app" hidden>
+    <div class="controls">
+      <input type="search" id="search" placeholder="Suche in IDs, Titeln, Statements und Erläuterungen (z. B. Schulung, Phishing, Berechtigung) …" aria-label="Suche">
+      <fieldset id="secFilter">
+        <legend>Schutzstufe</legend>
+        <label><input type="checkbox" value="normal-SdT" checked> normal-SdT</label>
+        <label><input type="checkbox" value="erhöht" checked> erhöht</label>
+      </fieldset>
+      <fieldset id="mvFilter">
+        <legend>Verbindlichkeit</legend>
+        <label><input type="checkbox" value="MUSS" checked> MUSS</label>
+        <label><input type="checkbox" value="SOLLTE" checked> SOLLTE</label>
+        <label><input type="checkbox" value="KANN" checked> KANN</label>
+      </fieldset>
+      <fieldset id="effFilter">
+        <legend>Aufwand</legend>
+        <label><input type="checkbox" value="0" checked> 0</label>
+        <label><input type="checkbox" value="1" checked> 1</label>
+        <label><input type="checkbox" value="2" checked> 2</label>
+        <label><input type="checkbox" value="3" checked> 3</label>
+        <label><input type="checkbox" value="4" checked> 4</label>
+        <label><input type="checkbox" value="5" checked> 5</label>
+      </fieldset>
+    </div>
+    <p class="count" id="count"></p>
+    <div id="tree"></div>
+  </div>
+</main>
+<footer>OSCAL-Viewer · Einzelne HTML-Datei · offline · ohne externe Abhängigkeiten · GNU GPL v3</footer>
+<script>
+// Theme früh setzen (vor Rendern, gegen Aufblitzen): dark-Klasse aus localStorage
+try {
+  if (localStorage.getItem('oscal-theme') === 'dark') document.documentElement.classList.add('dark');
+  else if (localStorage.getItem('oscal-theme') === 'light') document.documentElement.classList.add('light');
+} catch(e){ /* file:// ohne Storage: automatisch */ }
+</script>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let DATA = null, INDEX = [];   // INDEX: flache Liste aller Controls
+
+function prop(obj, name){        // ponytail: props-Array-Wert extrahieren, '' wenn fehlt
+  const p = (obj.props || []).find(x => x.name === name);
+  return p ? p.value : '';
+}
+
+function parseCatalog(raw){
+  let j;
+  try { j = JSON.parse(raw); }
+  catch(e){ throw new Error('Kein gültiges JSON: ' + e.message); }
+  const cat = j.catalog || j;
+  if (!cat || !Array.isArray(cat.groups)) throw new Error('Kein OSCAL-Katalog: Feld "catalog.groups" fehlt.');
+  return cat;
+}
+
+function extract(cat){
+  const idx = [];
+  cat.groups.forEach(g => {
+    (g.groups || []).forEach(p => {
+      (p.controls || []).forEach(c => {
+        const st = (c.parts || []).find(pt => pt.name === 'statement');
+        const gd = (c.parts || []).find(pt => pt.name === 'guidance');
+        idx.push({
+          gid: g.id, gtitle: g.title || g.id,
+          pid: p.id, ptitle: p.title || p.id,
+          id: c.id, title: c.title || '',
+          prose: st && st.prose ? st.prose : '',
+          guidance: gd && gd.prose ? gd.prose : '',
+          sec: prop(c, 'sec_level'),
+          eff: prop(c, 'effort_level'),
+          mv: prop(st, 'modal_verb'),
+          doc: prop(st, 'documentation'),
+          res: prop(st, 'result'),
+          resv: prop(st, 'result_specification'),
+          act: prop(st, 'action_word'),
+          toc: prop(st, 'target_object_categories')
+        });
+      });
+    });
+  });
+  return idx;
+}
+
+function render(){
+  const q = $('#search').value.trim().toLowerCase();
+  const secOn = new Set([...document.querySelectorAll('#secFilter input:checked')].map(i=>i.value));
+  const effOn = new Set([...document.querySelectorAll('#effFilter input:checked')].map(i=>i.value));
+  const mvOn = new Set([...document.querySelectorAll('#mvFilter input:checked')].map(i=>i.value));
+  const terms = q ? q.split(/\s+/) : [];
+  const visible = r => {
+    if (!secOn.has(r.sec)) return false;
+    if (!effOn.has(r.eff)) return false;
+    if (r.mv && !mvOn.has(r.mv)) return false;
+    return terms.every(t => r.hay.includes(t));
+  };
+  const rows = INDEX.filter(visible);
+  $('#count').textContent = rows.length + ' von ' + INDEX.length + ' Anforderungen sichtbar';
+  if (!rows.length){ $('#tree').innerHTML = '<p class="empty">Keine Treffer — Suche anpassen oder Filter lockern.</p>'; return; }
+  // Gruppen → Praktiken gruppieren
+  let out = '', lastG = null, lastP = null, openG = false, openP = false, prakList = false;
+  const endLists = () => {
+    if (prakList) out += '</ul></details>';
+    else if (openP) out += '</details>';
+    prakList = openP = false;
+  };
+  for (const r of rows){
+    if (r.gid !== lastG){
+      endLists();
+      if (openG) out += '</details>';
+      out += '<details class="group" open><summary>' + esc(r.gid) + ' — ' + esc(r.gtitle) + '</summary>';
+      openG = true; lastG = r.gid; lastP = null;
+    }
+    if (r.pid !== lastP){
+      endLists();
+      out += '<details class="prak"><summary>' + esc(r.pid) + ' ' + esc(r.ptitle) + '</summary><ul class="prak-list">';
+      openP = true; prakList = true; lastP = r.pid;
+    }
+    out += '<li class="req"><span class="id">' + esc(r.id) + '</span>'
+      + '<h4>' + esc(r.title) + '</h4><p>' + esc(r.prose) + '</p>'
+      + (r.guidance ? '<details class="guidance"><summary>Erläuterung</summary><p>' + esc(r.guidance) + '</p></details>' : '')
+      + '<div class="chips">'
+      + '<span class="chip' + (r.sec === 'erhöht' ? ' erhöht' : '') + '">' + esc(r.sec) + '</span>'
+      + '<span class="chip">Aufwand ' + esc(r.eff) + '</span>'
+      + (r.mv ? '<span class="chip' + (r.mv === 'MUSS' ? ' muss' : '') + '">' + esc(r.mv) + '</span>' : '')
+      + (r.doc ? '<span class="chip" title="Dokumentationsvorgabe">Doku: ' + esc(r.doc) + '</span>' : '')
+      + (r.toc ? '<span class="chip" title="Zielobjektkategorien">Zielobjekt: ' + esc(r.toc) + '</span>' : '')
+      + (r.act ? '<span class="chip" title="Handlungswort">' + esc(r.act) + '</span>' : '')
+      + (r.resv ? '<span class="chip" title="Ergebnisspezifikation">' + esc(r.resv) + '</span>' : '')
+      + '</div></li>';
+  }
+  endLists();
+  if (openG) out += '</details>';
+  $('#tree').innerHTML = out;
+}
+
+function loadText(text, name){
+  const cat = parseCatalog(text);
+  DATA = cat;
+  INDEX = extract(cat);
+  INDEX.forEach(r => r.hay = (r.id + ' ' + r.title + ' ' + r.prose + ' ' + (r.guidance||'')).toLowerCase());
+  const md = cat.metadata || {};
+  $('#meta').textContent = (md.title || 'Katalog') + ' · Version ' + (md.version || '?') + ' · Stand ' + (md['last-modified'] || '?').slice(0,10);
+  $('#intro').hidden = true;
+  $('#app').hidden = false;
+  $('#loadBtn').hidden = false;          // nachträglich andere Datei laden können
+  // Zustand zurücksetzen: Suche leeren, alle Filter an
+  $('#search').value = '';
+  document.querySelectorAll('.controls fieldset input[type=checkbox]').forEach(i => i.checked = true);
+  render();
+}
+
+// Hell/Dunkel-Umschaltung: 3 Zustände — auto (Standard, folgt System), dunkel, hell
+function applyTheme(state){
+  const root = document.documentElement;
+  root.classList.toggle('dark', state === 'dark');
+  root.classList.toggle('light', state === 'light');
+}
+(function(){
+  let state = 'auto';
+  try { state = localStorage.getItem('oscal-theme') || 'auto'; } catch(e){}
+  const btn = $('#themeBtn');
+  const label = { auto: 'Automatisch (folgt System)', dark: 'Dunkel', light: 'Hell' };
+  const paint = () => { btn.title = 'Farbschema: ' + label[state] + ' — klicken zum Wechseln'; applyTheme(state); };
+  btn.addEventListener('click', () => {
+    state = state === 'auto' ? 'dark' : state === 'dark' ? 'light' : 'auto';
+    try { localStorage.setItem('oscal-theme', state); } catch(e){}
+    paint();
+  });
+  paint();
+})();
+
+// Datei-Auswahl & Drag&Drop
+function handleFile(f){
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onerror = () => alert('Datei konnte nicht gelesen werden.');
+  rd.onload = () => {
+    try { loadText(rd.result, f.name); }
+    catch(e){ alert(e.message); console.error(e); }
+  };
+  rd.readAsText(f);
+}
+$('#file').addEventListener('change', e => { handleFile(e.target.files[0]); e.target.value = ''; });
+const drop = $('#drop');
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', e => {
+  e.preventDefault(); drop.classList.remove('over');
+  handleFile(e.dataTransfer.files[0]);
+});
+// Nachträgliches Einladen: Drag&Drop überall auf der Seite
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+
+// Filter/Suche — Debounce für große Kataloge
+let t;
+['input','change'].forEach(ev => document.addEventListener(ev, e => {
+  if (!e.target.closest('#app .controls')) return;
+  clearTimeout(t); t = setTimeout(render, 120);
+}));
+</script>
+</body>
+</html>

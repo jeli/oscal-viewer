@@ -1,0 +1,827 @@
+<!--
+  SPDX-License-Identifier: GPL-3.0-or-later
+  Browser-Prüfung für den OSCAL-Viewer
+  Copyright (C) 2026 Christian
+
+  This program is free software: you can redistribute it and/or modify it
+  under the terms of the GNU General Public License as published by the
+  Free Software Foundation, either version 3 of the License, or (at your
+  option) any later version.
+
+  This program is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+  more details.
+
+  You should have received a copy of the GNU General Public License along
+  with this program. If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
+-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browser-Prüfung — OSCAL-Viewer</title>
+<style>
+  body{margin:0;font:16px/1.55 Georgia,serif;background:#fff;color:#1a1a1a}
+  header{border-bottom:1px solid #d8d8d8;padding:14px 20px;overflow:auto}
+  header h1{font-size:1.1rem;margin:0;float:left}
+  header .meta{color:#666;font-size:.8rem;font-family:system-ui,sans-serif;float:right;margin:3px 46px 0 12px}
+  #themeBtn{border:1px solid #d8d8d8;background:#fff;color:#1a1a1a;border-radius:5px;width:34px;height:34px;cursor:pointer;display:block;float:right;padding:0;margin-top:-6px}
+  #themeBtn:hover{background:#f4f7fa}
+  #themeBtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  main{max-width:980px;margin:0 auto;padding:16px 20px 80px}
+  h2{font-size:1.15rem;font-family:system-ui,sans-serif;margin:34px 0 8px;padding-top:14px;border-top:1px solid #d8d8d8}
+  h2:first-of-type{border-top:none;margin-top:10px;padding-top:0}
+  h3{font-size:.95rem;font-family:system-ui,sans-serif;margin:22px 0 4px;color:#333}
+  p{margin:8px 0;font-size:.95rem}
+  .note{color:#666;font-size:.85rem;font-family:system-ui,sans-serif;margin:2px 0 10px}
+  .legend{color:#666;font-size:.85rem;font-family:system-ui,sans-serif;margin:2px 0 14px}
+  table{border-collapse:collapse;width:100%;margin:10px 0 18px;font-size:.87rem;font-family:system-ui,sans-serif}
+  th{text-align:left;padding:7px 10px;border-bottom:2px solid #d0d7de;font-weight:600;color:#0f1419}
+  th[scope=row]{font-weight:600;border-bottom:1px solid #e5e8eb;width:24%}
+  td{padding:7px 10px;border-bottom:1px solid #e5e8eb;vertical-align:top;color:#2b3138}
+  .ampcell{width:15%;white-space:nowrap}
+  .det{width:31%}
+  .hint{color:#666;width:30%}
+  .dot{display:inline-block;width:13px;height:13px;border-radius:50%;border:1px solid #c8cdd3;vertical-align:-2px}
+  .dot.big{width:22px;height:22px;vertical-align:-4px}
+  .st-ok{background:#1e7e34;border-color:#14602a}
+  .st-bad{background:#c62828;border-color:#8e1b1b}
+  .st-warn{background:#b26a00;border-color:#7d4a00}
+  .st-none{background:#c3c8cd;border-color:#aab0b6}
+  .st-info{background:#5f7290;border-color:#3f5270}
+  .amp-lbl{font-size:.8rem}
+  .verdict{border:1px solid #d8d8d8;border-left-width:5px;border-radius:8px;padding:12px 16px;margin:14px 0;background:#f7f8fa}
+  .verdict.vb-bad{border-color:#c62828;background:#fdf1f0}
+  .verdict.vb-ok{border-color:#1e7e34;background:#f0f7f1}
+  .verdict.vb-none{border-color:#b26a00;background:#faf4e8}
+  .verdict strong{font-family:system-ui,sans-serif;font-size:1rem}
+  .verdict ul{margin:8px 0 2px;padding-left:22px}
+  .verdict li{margin:4px 0;font-size:.9rem;font-family:system-ui,sans-serif}
+  .verdict em{color:#555}
+  .box{border:1px solid #d8d8d8;border-left-width:4px;border-radius:6px;padding:10px 14px;margin:12px 0;font-size:.92rem;font-family:system-ui,sans-serif}
+  .box.info{border-color:#8195b0;background:#f4f7fa}
+  .box.bad{border-color:#c62828;background:#fdf1f0}
+  .btn{display:inline-block;border:1px solid #005a9c;color:#005a9c;border-radius:5px;padding:7px 14px;cursor:pointer;font-family:system-ui,sans-serif;font-size:.85rem;background:#fff;text-decoration:none}
+  .btn:hover{background:#f4f7fa}
+  #drop{border:2px dashed #d8d8d8;border-radius:8px;padding:28px 20px;text-align:center;color:#666;font-family:system-ui,sans-serif;font-size:.95rem;margin:8px 0 12px}
+  #drop.over{border-color:#005a9c;color:#005a9c}
+  #report{width:100%;min-height:230px;margin:10px 0;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f6f8fa;color:#1f2328;border:1px solid #d0d7de;border-radius:6px;padding:10px 12px}
+  .controls2{margin:10px 0 0}
+  #copyMsg{margin-left:10px}
+  a.hint{color:#666;font-size:.82rem;font-family:system-ui,sans-serif}
+  footer{border-top:1px solid #d8d8d8;margin-top:44px;padding:12px 20px;color:#666;font-family:system-ui,sans-serif;font-size:.75rem;text-align:center}
+  /* Dunkel-Theme (Klasse am html-Element) */
+  html.dark body{background:#16181d;color:#e2e4e9}
+  html.dark header{border-bottom-color:#3a3f47}
+  html.dark header .meta{color:#9aa0aa}
+  html.dark #themeBtn{background:#16181d;border-color:#3a3f47;color:#e2e4e9}
+  html.dark #themeBtn:hover{background:#1d2128}
+  html.dark h2{border-top-color:#3a3f47}
+  html.dark h3{color:#c9ccd3}
+  html.dark .note,html.dark .legend,html.dark .hint,html.dark footer{color:#9aa0aa}
+  html.dark th{color:#e2e4e9;border-bottom-color:#3a3f47}
+  html.dark th[scope=row]{border-bottom-color:#2b3038}
+  html.dark td{border-bottom-color:#2b3038;color:#c9ccd3}
+  html.dark .dot{border-color:#3a3f47}
+  html.dark .st-ok{background:#57ab5a;border-color:#2c6e30}
+  html.dark .st-bad{background:#f85149;border-color:#a33}
+  html.dark .st-warn{background:#d29922;border-color:#8a6414}
+  html.dark .st-none{background:#57606a;border-color:#3a3f47}
+  html.dark .st-info{background:#8195b0;border-color:#4a5f80}
+  html.dark .verdict{border-color:#3a3f47;background:#1d2128}
+  html.dark .verdict.vb-bad{border-color:#f85149;background:#2a1a1a}
+  html.dark .verdict.vb-ok{border-color:#57ab5a;background:#17251a}
+  html.dark .verdict.vb-none{border-color:#d29922;background:#26200f}
+  html.dark .verdict em{color:#9aa0aa}
+  html.dark .box{border-color:#3a3f47;background:#1d2128;color:#c9ccd3}
+  html.dark .box.info{border-color:#4a5f80}
+  html.dark .box.bad{border-color:#f85149}
+  html.dark .btn{background:#16181d;border-color:#4a90c0;color:#6cb2e5}
+  html.dark .btn:hover{background:#1d2128}
+  html.dark #drop{border-color:#3a3f47;color:#9aa0aa}
+  html.dark #drop.over{border-color:#6cb2e5;color:#6cb2e5}
+  html.dark #report{background:#1e2228;color:#e2e4e9;border-color:#3a3f47}
+</style>
+</head>
+<body>
+<script>
+// FOUC-Schutz: gespeichertes Theme früh anwenden (bewusst ES5)
+try {
+  if (window.localStorage) {
+    var __t = localStorage.getItem('ocvcheck-theme');
+    if (__t === 'dark') { document.documentElement.className = 'dark'; }
+  }
+} catch (e) { }
+</script>
+<script>
+// Canary 1: const/let + Pfeilfunktionen (gültig ab ES2015).
+// Browser ohne ES2015 können diesen Block nicht parsen — das Flag bleibt dann undefined.
+window.__c1 = (function () { const f = a => a + 1; return f(1) === 2; })();
+</script>
+<script>
+// Canary 2: Spread-Operator (gültig ab ES2015).
+window.__c2 = (function () { const arr = [2, 7, 3]; return Math.max(...arr) === 7; })();
+</script>
+
+<header>
+  <h1>Browser-Prüfung — OSCAL-Viewer</h1>
+  <span class="meta">Prüfseite für oscal-viewer.html · v1.0</span>
+  <button id="themeBtn" type="button" aria-label="Hell/Dunkel umschalten" title="Hell/Dunkel umschalten">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
+</header>
+<main>
+  <div id="jsWarn" class="box bad">
+    <strong>JavaScript ist deaktiviert oder wurde blockiert.</strong>
+    Diese Seite kann dann keine Prüfungen ausführen — und das ist bereits die Ursache:
+    Der OSCAL-Viewer benötigt zwingend JavaScript. Bitte JavaScript aktivieren bzw.
+    die entsprechende Browser-Richtlinie prüfen lassen.
+  </div>
+
+  <div id="verdict" class="verdict">
+    <span class="dot big st-none" id="vdot"></span>
+    <div id="vtext">Prüfungen laufen …</div>
+  </div>
+
+  <div class="box info">
+    <strong>So gehen Sie vor:</strong>
+    1. Die automatischen Prüfungen laufen beim Öffnen der Seite.
+    2. Führen Sie den Live-Test „Datei einlesen“ (Abschnitt 2) aus — idealerweise mit dem Katalog-JSON.
+    3. Optional: Drag&amp;Drop- und Dialog-Test (Abschnitte 3 und 4).
+    4. Erzeugen Sie unten den Bericht und senden Sie ihn zurück — auf Basis der Befunde
+    wird die angepasste Viewer-Kopie gebaut.
+  </div>
+
+  <h2>1. Automatische Prüfungen</h2>
+  <p class="legend">Ampel: <span class="dot st-ok"></span> grün = erforderlich und vorhanden ·
+  <span class="dot st-bad"></span> rot = erforderlich, fehlt oder ist gesperrt ·
+  <span class="dot st-warn"></span> gelb = optional, Viewer läuft mit Einschränkung ·
+  <span class="dot st-none"></span> grau = noch nicht getestet</p>
+
+  <h3>1.1 JavaScript-Syntax und -Funktionen</h3>
+  <p class="note">Rot hier: Der aktuelle Viewer bricht bereits beim Laden ab. Behebbar durch eine angepasste ES5-Kopie (Syntax-Umbau).</p>
+  <table><thead><tr><th>Prüfung</th><th>Ampel</th><th>Ergebnis</th><th>Bedeutung für den Viewer</th></tr></thead>
+  <tbody id="t-syntax"></tbody></table>
+
+  <h3>1.2 Datei-API (Einlesen der Katalog-Datei)</h3>
+  <p class="note">Rot hier: Der Weg über die Dateiauswahl ist gesperrt oder fehlerhaft. Dann hilft nur eine Entsperrung durch die IT — oder eine Kopie, die den Katalog als eingefügten Text annimmt.</p>
+  <table><thead><tr><th>Prüfung</th><th>Ampel</th><th>Ergebnis</th><th>Bedeutung für den Viewer</th></tr></thead>
+  <tbody id="t-file"></tbody></table>
+
+  <h3>1.3 Verarbeitung, Dialoge und Darstellung</h3>
+  <p class="note">Gelb hier: Der Viewer läuft, mit Einschränkungen (Darstellung bzw. unsichtbare Fehlermeldungen).</p>
+  <table><thead><tr><th>Prüfung</th><th>Ampel</th><th>Ergebnis</th><th>Bedeutung für den Viewer</th></tr></thead>
+  <tbody id="t-proc"></tbody></table>
+
+  <h3>1.4 Umgebung (Information)</h3>
+  <table><thead><tr><th>Angabe</th><th>Ampel</th><th>Wert</th><th>Bedeutung für den Viewer</th></tr></thead>
+  <tbody id="t-env"></tbody></table>
+
+  <h2>2. Live-Test: Datei einlesen (der entscheidende Test)</h2>
+  <p>Dieser Test läuft exakt wie der Ladevorgang des Viewers ab: Dateiauswahl → FileReader → JSON.parse.
+  Bitte eine beliebige Datei auswählen — idealerweise der Katalog (JSON-Datei).</p>
+  <p>
+    <label class="btn" for="e2file">Datei auswählen …</label>
+    &nbsp; <a href="#" id="e2reset" class="hint">Live-Test zurücksetzen</a>
+  </p>
+  <input type="file" id="e2file" accept=".json,application/json" hidden style="display:none">
+  <table><thead><tr><th>Schritt</th><th>Ampel</th><th>Ergebnis</th><th>Zweck</th></tr></thead>
+  <tbody id="t-e2e"></tbody></table>
+
+  <h2>3. Live-Test: Drag &amp; Drop</h2>
+  <p>Zieht man eine Datei auf die Viewer-Seite, lädt sie diese ohne Datei-Dialog. Dafür müssen drei Dinge funktionieren:</p>
+  <div id="drop" class="drop">Datei hierher ziehen</div>
+  <table><thead><tr><th>Schritt</th><th>Ampel</th><th>Ergebnis</th><th>Zweck</th></tr></thead>
+  <tbody id="t-drag"></tbody></table>
+
+  <h2>4. Live-Test: Hinweis-Dialog (alert)</h2>
+  <p>Der Viewer meldet Fehler ausschließlich über alert-Dialoge. Werden Dialoge still blockiert,
+  bleibt jeder Fehler unsichtbar — das erzeugt den Eindruck „nach der Auswahl passiert nichts“.</p>
+  <p><button class="btn" id="albtn" type="button">Dialog testen</button></p>
+  <table><thead><tr><th>Prüfung</th><th>Ampel</th><th>Ergebnis</th><th>Bedeutung für den Viewer</th></tr></thead>
+  <tbody id="t-dlg"></tbody></table>
+
+  <h2>5. Bericht für die Rückmeldung</h2>
+  <p>Den erzeugten Text bitte kopieren und zurücksenden — auf Basis der Befunde wird die
+  angepasste Viewer-Kopie gebaut.</p>
+  <div class="controls2">
+    <button class="btn" id="repBtn" type="button">Bericht als Text erzeugen</button>
+    <button class="btn" id="copyBtn" type="button" style="display:none">Bericht kopieren</button>
+    <span id="copyMsg" class="hint"></span>
+  </div>
+  <textarea id="report" rows="16" readonly spellcheck="false" placeholder="Hier erscheint der Bericht …"></textarea>
+</main>
+<footer>Browser-Check für den OSCAL-Viewer · einzelne HTML-Datei · offline · ohne externe Abhängigkeiten · v1.0 · 2026-10-08</footer>
+
+<script>
+// Haupt-Script — bewusst ES5, damit diese Prüfseite selbst auf gesperrten/alten Browsern läuft.
+(function () {
+  var R = {};                       // Ergebnisse je Prüfung: {state, detail}
+  var LABEL = { ok: 'vorhanden', bad: 'fehlt', warn: 'eingeschränkt', none: 'offen', info: 'info' };
+
+  function $(id) { return document.getElementById(id); }
+  function txt(el, s) { if (!el) return; if ('textContent' in el) { el.textContent = s; } else { el.innerText = s; } }
+  function txtGet(el) { if (!el) return ''; return ('textContent' in el) ? el.textContent : el.innerText; }
+  function on(el, ev, fn) { if (el.addEventListener) { el.addEventListener(ev, fn, false); } else if (el.attachEvent) { el.attachEvent('on' + ev, fn); } }
+  function noDef(e) { if (e.preventDefault) { e.preventDefault(); } else { e.returnValue = false; } }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function msg(e) {
+    var m = (e && e.message) ? e.message : (e ? '' + e : 'unbekannter Fehler');
+    m = '' + m;
+    return m.length > 120 ? m.slice(0, 120) + ' …' : m;
+  }
+  function fmtDate() {
+    var d = new Date();
+    function p(x) { return x < 10 ? ('0' + x) : ('' + x); }
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  // ---- Prüfungs-Katalog ------------------------------------------------------
+  var CHECKS = [
+    // 1.1 Syntax (cat A = per ES5-Kopie behebbar)
+    { sec: 'syntax', cat: 'A', id: 'js', name: 'JavaScript aktiv',
+      hint: 'Der gesamte Viewer ist in JavaScript geschrieben — ohne JavaScript passiert nach der Dateiauswahl nichts.',
+      run: function () { return { state: 'ok', detail: 'Script läuft — diese Seite arbeitet' }; } },
+    { sec: 'syntax', cat: 'A', id: 'es5', name: 'ES5-Basis (Array.every, String.trim)',
+      hint: 'Grundlage jeder lauffähigen Kopie; praktisch jeder Browser ab 2009 verfügt darüber.',
+      run: function () {
+        var ok = typeof Array.prototype.every === 'function' && typeof String.prototype.trim === 'function';
+        return ok ? { state: 'ok', detail: 'vorhanden' } : { state: 'bad', detail: 'fehlt — Browser unterstützt nicht einmal ES5' };
+      } },
+    { sec: 'syntax', cat: 'A', id: 'c1', name: 'const/let und Pfeilfunktionen (ES2015)',
+      hint: 'Alle Viewer-Funktionen sind Pfeilfunktionen, alle Variablen const/let — ohne Unterstützung bricht das Script bereits beim Laden ab.',
+      run: function () {
+        return window.__c1 === true
+          ? { state: 'ok', detail: 'Syntax wird unterstützt' }
+          : { state: 'bad', detail: 'Syntax wird abgewiesen (Canary fehlgeschlagen) — Script bricht beim Laden ab' };
+      } },
+    { sec: 'syntax', cat: 'A', id: 'c2', name: 'Spread-Operator',
+      hint: 'Suche und Filter lesen Markierungen über Spread-Ausdrücke aus dem DOM.',
+      run: function () {
+        return window.__c2 === true
+          ? { state: 'ok', detail: 'Syntax wird unterstützt' }
+          : { state: 'bad', detail: 'Spread wird abgewiesen (Canary fehlgeschlagen)' };
+      } },
+    { sec: 'syntax', cat: 'A', id: 'set', name: 'Set',
+      hint: 'Die Filter-Zustände des Viewers werden als Set verwaltet.',
+      run: function () {
+        try { if (typeof Set === 'function') { var s = new Set([1, 2]); if (s.size === 2) { return { state: 'ok', detail: 'vorhanden' }; } } } catch (e) { }
+        return { state: 'bad', detail: 'fehlt — Filterlogik bricht ab' };
+      } },
+    { sec: 'syntax', cat: 'A', id: 'find', name: 'Array.prototype.find',
+      hint: 'Statement, Erläuterung und Eigenschaften werden über find extrahiert.',
+      run: function () {
+        return typeof Array.prototype.find === 'function'
+          ? { state: 'ok', detail: 'vorhanden' } : { state: 'bad', detail: 'fehlt' };
+      } },
+    { sec: 'syntax', cat: 'A', id: 'includes', name: 'String.prototype.includes',
+      hint: 'Die Volltextsuche prüft Treffer über includes.',
+      run: function () {
+        return typeof String.prototype.includes === 'function'
+          ? { state: 'ok', detail: 'vorhanden' } : { state: 'bad', detail: 'fehlt' };
+      } },
+    { sec: 'syntax', cat: 'A', id: 'closest', name: 'Element.closest',
+      hint: 'Such- und Filter-Eingaben werden im Viewer über closest zugeordnet.',
+      run: function () {
+        var d = document.createElement('div');
+        return typeof d.closest === 'function'
+          ? { state: 'ok', detail: 'vorhanden' } : { state: 'bad', detail: 'fehlt' };
+      } },
+    { sec: 'syntax', cat: 'A', id: 'classList', name: 'Element-Klassenliste (classList)',
+      hint: 'Theme-Umschaltung und Drag-Rückmeldung nutzen die Klassenliste.',
+      run: function () {
+        var d = document.createElement('div');
+        var ok = d.classList && typeof d.classList.add === 'function' && typeof d.classList.toggle === 'function';
+        return ok ? { state: 'ok', detail: 'vorhanden' } : { state: 'bad', detail: 'fehlt' };
+      } },
+    // 1.2 Datei-API (cat B = Datei-Weg gesperrt)
+    { sec: 'file', cat: 'B', id: 'input', name: 'Datei-Eingabefeld (input type=file)',
+      hint: 'Über dieses Element wählt der Viewer die Katalog-Datei aus.',
+      run: function () {
+        var i = document.createElement('input'); i.type = 'file';
+        return ('files' in i)
+          ? { state: 'ok', detail: 'unterstützt' }
+          : { state: 'bad', detail: 'nicht unterstützt — Dateiauswahl fehlt oder ist gesperrt' };
+      } },
+    { sec: 'file', cat: 'B', id: 'fr', name: 'FileReader vorhanden',
+      hint: 'Der Viewer liest die gewählte Datei ausschließlich über den FileReader.',
+      run: function () {
+        return typeof window.FileReader !== 'undefined'
+          ? { state: 'ok', detail: 'vorhanden' }
+          : { state: 'bad', detail: 'fehlt — Einlesen unmöglich' };
+      } },
+    { sec: 'file', cat: 'B', id: 'frtext', name: 'FileReader.readAsText',
+      hint: 'Konkrete Lesemethode für den Katalog-Text.',
+      run: function () {
+        var ok = typeof window.FileReader !== 'undefined' && FileReader.prototype
+          && typeof FileReader.prototype.readAsText === 'function';
+        return ok ? { state: 'ok', detail: 'vorhanden' } : { state: 'bad', detail: 'fehlt' };
+      } },
+    // 1.3 Verarbeitung/Darstellung
+    { sec: 'proc', cat: 'F', id: 'json', name: 'JSON.parse / JSON.stringify',
+      hint: 'Der Katalog wird mit JSON.parse verarbeitet — ohne JSON-Verarbeitung ist keine Kopie sinnvoll möglich.',
+      run: function () {
+        var ok = typeof window.JSON === 'object' && typeof JSON.parse === 'function' && typeof JSON.stringify === 'function';
+        return ok ? { state: 'ok', detail: 'vorhanden' } : { state: 'bad', detail: 'fehlt' };
+      } },
+    { sec: 'proc', cat: 'C', id: 'storage', name: 'localStorage (Theme-Speicher)',
+      hint: 'Speichert nur die Hell/Dunkel-Einstellung; der Viewer fängt Fehler ab und läuft ohne.',
+      run: function () {
+        try {
+          localStorage.setItem('ocvcheck-probe', '1');
+          var v = localStorage.getItem('ocvcheck-probe');
+          localStorage.removeItem('ocvcheck-probe');
+          return v === '1' ? { state: 'ok', detail: 'Schreiben/Lesen/Löschen funktioniert' } : { state: 'warn', detail: 'Lesen lieferte keinen Wert' };
+        } catch (e) { return { state: 'warn', detail: 'blockiert (' + msg(e) + ')' }; }
+      } },
+    { sec: 'proc', cat: 'C', id: 'details', name: 'details/summary-Element',
+      hint: 'Gruppen, Praktiken und Erläuterungen sind aufklappbare Elemente — ohne Unterstützung erscheinen sie dauernd geöffnet.',
+      run: function () {
+        var d = document.createElement('details');
+        return typeof d.open === 'boolean'
+          ? { state: 'ok', detail: 'unterstützt' } : { state: 'warn', detail: 'nicht unterstützt — Katalog erscheint komplett aufgeklappt' };
+      } },
+    { sec: 'proc', cat: 'C', id: 'cssvar', name: 'CSS-Variablen (var(…))',
+      hint: 'Das Farbschema des Viewers basiert auf CSS-Variablen — ohne Unterstützung wirkt er ungestaltet, funktioniert aber.',
+      run: function () {
+        var ok = false;
+        try { ok = typeof window.CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('color', 'var(--x)'); } catch (e) { }
+        return ok ? { state: 'ok', detail: 'unterstützt' } : { state: 'warn', detail: 'nicht feststellbar oder fehlt — Darstellung wirkt dann ungestaltet' };
+      } },
+    { sec: 'proc', cat: 'C', id: 'scheme', name: 'Farbschema-Abfrage (prefers-color-scheme)',
+      hint: 'Nur für das automatische Hell/Dunkel des Viewers relevant (kosmetisch).',
+      run: function () {
+        var ok = false;
+        try {
+          if (typeof window.matchMedia === 'function') {
+            var m = window.matchMedia('(prefers-color-scheme: dark)');
+            ok = !!(m && typeof m.matches === 'boolean');
+          }
+        } catch (e) { }
+        return ok ? { state: 'ok', detail: 'abfragbar' } : { state: 'warn', detail: 'nicht abfragbar — Theme folgt nur der manuellen Wahl' };
+      } },
+    { sec: 'proc', cat: 'C', id: 'con', name: 'Konsole (console.error)',
+      hint: 'Zusätzliche Fehlerdetails in der Entwicklerkonsole (kosmetisch).',
+      run: function () {
+        var ok = typeof window.console === 'object' && typeof console.error === 'function';
+        return ok ? { state: 'ok', detail: 'vorhanden' } : { state: 'warn', detail: 'fehlt' };
+      } },
+    // 1.4 Umgebung (Info)
+    { sec: 'env', cat: 'I', id: 'proto', name: 'Protokoll',
+      hint: 'Zeigt, wie die Seite geöffnet wurde (file: = lokale Datei).',
+      run: function () {
+        var p = '?'; try { p = location.protocol || '?'; } catch (e) { }
+        return { state: 'info', detail: p };
+      } },
+    { sec: 'env', cat: 'I', id: 'ua', name: 'Browser-Kennung (User-Agent)',
+      hint: 'Browser-Identität für die Rückmeldung.',
+      run: function () {
+        var u = '?'; try { u = navigator.userAgent || '?'; } catch (e) { }
+        if (u.length > 220) { u = u.slice(0, 220) + ' …'; }
+        return { state: 'info', detail: u };
+      } },
+    // 2 Live-Test Datei (cat B)
+    { sec: 'e2e', cat: 'B', id: 'e2-change', name: 'Datei-Auswahl meldet sich (change-Event)',
+      hint: 'Erster Schritt des Ladevorgangs im Viewer.', live: true,
+      run: function () { return { state: 'none', detail: 'bitte Datei auswählen' }; } },
+    { sec: 'e2e', cat: 'B', id: 'e2-list', name: 'Datei-Liste (FileList) übergeben',
+      hint: 'Die Auswahl muss als Datei-Objekt ankommen.', live: true,
+      run: function () { return { state: 'none', detail: '—' }; } },
+    { sec: 'e2e', cat: 'B', id: 'e2-meta', name: 'Datei-Eigenschaften lesbar (Name, Größe)',
+      hint: 'Name und Größe werden für die Anzeige gelesen.', live: true,
+      run: function () { return { state: 'none', detail: '—' }; } },
+    { sec: 'e2e', cat: 'B', id: 'e2-start', name: 'FileReader-Instanz erzeugt',
+      hint: 'Der Viewer startet das Einlesen so.', live: true,
+      run: function () { return { state: 'none', detail: '—' }; } },
+    { sec: 'e2e', cat: 'B', id: 'e2-load', name: 'Einlesen abgeschlossen (onload)',
+      hint: 'Der gelesene Text kommt hier an.', live: true,
+      run: function () { return { state: 'none', detail: '—' }; } },
+    { sec: 'e2e', cat: 'B', id: 'e2-content', name: 'Inhalt gelesen (mehr als 0 Zeichen)',
+      hint: 'Ohne Inhalt kann nichts geparst werden.', live: true,
+      run: function () { return { state: 'none', detail: '—' }; } },
+    { sec: 'e2e', cat: 'B', id: 'e2-json', name: 'JSON.parse auf die Datei',
+      hint: 'Der Viewer parst die Datei als JSON.', live: true,
+      run: function () { return { state: 'none', detail: '—' }; } },
+    { sec: 'e2e', cat: 'B', id: 'e2-struct', name: 'OSCAL-Katalog-Struktur erkannt',
+      hint: 'Erwartet: catalog.groups[].groups[].controls[].', live: true,
+      run: function () { return { state: 'none', detail: '—' }; } },
+    // 3 Drag & Drop (cat C)
+    { sec: 'drag', cat: 'C', id: 'dg-over', name: 'dragover-Ereignis',
+      hint: 'Drag-Overlay des Viewers reagiert auf dragover.', live: true,
+      run: function () { return { state: 'none', detail: 'bitte Datei in das Feld ziehen' }; } },
+    { sec: 'drag', cat: 'C', id: 'dg-drop', name: 'drop-Ereignis',
+      hint: 'Ziehen und Loslassen muss drop auslösen.', live: true,
+      run: function () { return { state: 'none', detail: '—' }; } },
+    { sec: 'drag', cat: 'C', id: 'dg-files', name: 'Gedroppte Datei lesbar (dataTransfer.files)',
+      hint: 'Die abgelegte Datei muss als Liste ankommen.', live: true,
+      run: function () { return { state: 'none', detail: '—' }; } },
+    // 4 Dialog (cat C)
+    { sec: 'dlg', cat: 'C', id: 'al', name: 'Hinweis-Dialog (alert)',
+      hint: 'Der Viewer meldet Fehler über Dialoge — blockierte Dialoge machen Fehler unsichtbar.',
+      live: true, run: function () { return { state: 'none', detail: 'bitte „Dialog testen“ klicken' }; } }
+  ];
+
+  var TBY = { syntax: 't-syntax', file: 't-file', proc: 't-proc', env: 't-env', e2e: 't-e2e', drag: 't-drag', dlg: 't-dlg' };
+  var SECNAME = { syntax: 'JavaScript-Syntax und -Funktionen', file: 'Datei-API (statisch)', proc: 'Verarbeitung, Dialoge und Darstellung', env: 'Umgebung', e2e: 'Live-Test Datei einlesen', drag: 'Live-Test Drag und Drop', dlg: 'Live-Test Hinweis-Dialog' };
+  var SECORDER = ['syntax', 'file', 'proc', 'env', 'e2e', 'drag', 'dlg'];
+
+  // ---- Ampel ------------------------------------------------------------------
+  function setR(id, state, detail) {
+    R[id] = { state: state, detail: detail || '' };
+    var c = $('c-' + id), l = $('l-' + id), d = $('d-' + id);
+    var k = state === 'ok' ? 'st-ok' : state === 'bad' ? 'st-bad' : state === 'warn' ? 'st-warn' : state === 'info' ? 'st-info' : 'st-none';
+    if (c) { c.className = 'dot ' + k; }
+    if (l) { txt(l, LABEL[state] || state); }
+    if (d) { txt(d, R[id].detail || '—'); }
+    verdict();
+  }
+
+  function classify() {
+    var redA = [], redB = [], redF = [], warn = [], i, ch, r;
+    for (i = 0; i < CHECKS.length; i++) {
+      ch = CHECKS[i]; r = R[ch.id]; if (!r) { continue; }
+      if (r.state === 'bad') {
+        if (ch.cat === 'A') { redA.push(ch.name); }
+        else if (ch.cat === 'B') { redB.push(ch.name); }
+        else if (ch.cat === 'F') { redF.push(ch.name); }
+        else if (ch.cat === 'C') { warn.push(ch.name); }
+      } else if (r.state === 'warn') { warn.push(ch.name); }
+    }
+    if (redA.length || redB.length || redF.length) {
+      return { state: 'bad', redA: redA, redB: redB, redF: redF, warn: warn };
+    }
+    var pend = false;
+    if (!R['e2-change'] || R['e2-change'].state === 'none') { pend = true; }
+    if (R['e2-json'] && R['e2-json'].state === 'warn') { pend = true; }
+    if (pend) { return { state: 'none', warn: warn }; }
+    return { state: 'ok', warn: warn };
+  }
+
+  function verdict() {
+    var v = classify(), box = $('verdict'), dot = $('vdot'), t = $('vtext');
+    if (!box || !t) { return; }
+    box.className = 'verdict ' + (v.state === 'bad' ? 'vb-bad' : v.state === 'ok' ? 'vb-ok' : 'vb-none');
+    dot.className = 'dot big ' + (v.state === 'bad' ? 'st-bad' : v.state === 'ok' ? 'st-ok' : 'st-warn');
+    var h = '';
+    if (v.state === 'bad') {
+      h = '<strong>Der OSCAL-Viewer läuft auf diesem Browser nicht.</strong>';
+      var L = [];
+      if (v.redA.length) {
+        L.push('<li><strong>JavaScript-Syntax:</strong> ' + esc(v.redA.join(', ')) +
+          ' — der Viewer bricht bereits beim Laden ab. <em>Abhilfe: angepasste ES5-Kopie des Viewers (Syntax-Umbau, machbar).</em></li>');
+      }
+      if (v.redB.length) {
+        L.push('<li><strong>Datei-Einlesen:</strong> ' + esc(v.redB.join(', ')) +
+          ' — der Weg über die Dateiauswahl ist gesperrt oder fehlerhaft. <em>Abhilfe: Dateiauswahl durch die IT freigeben lassen oder angepasste Kopie mit Text-Einfügefeld für den Katalog.</em></li>');
+      }
+      if (v.redF.length) {
+        L.push('<li><strong>Verarbeitung:</strong> ' + esc(v.redF.join(', ')) +
+          ' — ohne JSON-Verarbeitung ist keine Kopie sinnvoll möglich.</li>');
+      }
+      h += '<ul>' + L.join('') + '</ul>' +
+        '<span class="hint">Die rot markierten Zeilen zeigen die genauen Bruchstellen.</span>';
+    } else if (v.state === 'none') {
+      h = '<strong>Automatische Prüfungen abgeschlossen.</strong> ';
+      if (!R['e2-change'] || R['e2-change'].state === 'none') {
+        h += 'Bitte jetzt den Live-Test „Datei einlesen“ (Abschnitt 2) ausführen — er prüft den entscheidenden Pfad des Viewers.';
+      } else if (R['e2-json'] && R['e2-json'].state === 'warn') {
+        h += 'Der Live-Test lief, aber nicht mit einer JSON-Datei. Bitte ihn mit dem Katalog-JSON wiederholen.';
+      } else {
+        h += 'Der Live-Test wurde zurückgesetzt — bitte erneut eine Datei auswählen (Abschnitt 2).';
+      }
+      if (v.warn.length) { h += '<br>Einschränkungen bisher (gelb): ' + esc(v.warn.join(', ')) + '.'; }
+    } else {
+      h = '<strong>Alle erforderlichen Prüfungen sind grün.</strong> Der OSCAL-Viewer sollte auf diesem Browser lauffähig sein.';
+      if (v.warn.length) { h += '<br>Einschränkungen (gelb, kosmetisch): ' + esc(v.warn.join(', ')) + '.'; }
+      else { h += '<br>Keine Einschränkungen gefunden.'; }
+    }
+    t.innerHTML = h;
+  }
+
+  // ---- Tabellen ---------------------------------------------------------------
+  function rowHTML(ch) {
+    return '<tr><th scope="row">' + esc(ch.name) + '</th>' +
+      '<td class="ampcell"><span class="dot st-none" id="c-' + ch.id + '"></span> ' +
+      '<span class="amp-lbl" id="l-' + ch.id + '">läuft …</span></td>' +
+      '<td class="det" id="d-' + ch.id + '">—</td>' +
+      '<td class="hint">' + esc(ch.hint) + '</td></tr>';
+  }
+
+  function renderRows() {
+    var html = {}, s, i;
+    for (s in TBY) { if (TBY.hasOwnProperty(s)) { html[TBY[s]] = ''; } }
+    for (i = 0; i < CHECKS.length; i++) { html[TBY[CHECKS[i].sec]] += rowHTML(CHECKS[i]); }
+    for (s in TBY) { if (TBY.hasOwnProperty(s)) { $(TBY[s]).innerHTML = html[TBY[s]]; } }
+  }
+
+  function runStatic() {
+    var i, r;
+    for (i = 0; i < CHECKS.length; i++) {
+      if (CHECKS[i].run) {
+        r = CHECKS[i].run();
+        setR(CHECKS[i].id, r.state, r.detail);
+      }
+    }
+  }
+
+  // ---- Live-Test: Datei einlesen ----------------------------------------------
+  var E2IDS = ['e2-change', 'e2-list', 'e2-meta', 'e2-start', 'e2-load', 'e2-content', 'e2-json', 'e2-struct'];
+
+  function clearFrom(id) {
+    var i, k = E2IDS.length;
+    for (i = 0; i < k; i++) {
+      if (E2IDS[i] === id) { break; }
+    }
+    for (; i < k; i++) { setR(E2IDS[i], 'none', '— nicht erreicht'); }
+  }
+
+  function resetE2() {
+    var i;
+    for (i = 0; i < E2IDS.length; i++) { setR(E2IDS[i], 'none', '—'); }
+    setR('e2-change', 'none', 'bitte Datei auswählen');
+    var fi = $('e2file');
+    try { fi.value = ''; } catch (e) { }
+  }
+
+  function checkStructure(s, nm) {
+    var s2 = (typeof s === 'string') ? s : '' + s;
+    var j = null;
+    if (s2.length === 0) {
+      setR('e2-content', 'bad', 'Ergebnis leer (0 Zeichen)');
+      clearFrom('e2-json');
+      return;
+    }
+    setR('e2-content', 'ok', s2.length + ' Zeichen gelesen');
+    try { j = JSON.parse(s2); }
+    catch (e) {
+      if (/\.json$/i.test(nm)) {
+        setR('e2-json', 'bad', 'JSON.parse schlug fehl: ' + msg(e));
+      } else {
+        setR('e2-json', 'warn', 'keine JSON-Datei (' + nm + ') — für den Katalog-Test bitte JSON wählen');
+      }
+      setR('e2-struct', 'none', '—');
+      return;
+    }
+    setR('e2-json', 'ok', 'JSON geparst');
+    var cat = (j && j.catalog) ? j.catalog : j;
+    var g = cat && cat.groups;
+    var grp = 0, prak = 0, anz = 0, i, k, cc;
+    if (g && typeof g.length === 'number') {
+      for (i = 0; i < g.length; i++) {
+        var gg = g[i] && g[i].groups;
+        if (!gg) { continue; }
+        grp++;
+        for (k = 0; k < gg.length; k++) {
+          cc = gg[k] && gg[k].controls;
+          if (!cc) { continue; }
+          prak++;
+          anz += cc.length;
+        }
+      }
+    }
+    if (anz > 0) {
+      var t = (cat.metadata && cat.metadata.title) ? cat.metadata.title : '';
+      setR('e2-struct', 'ok', 'OSCAL-Katalog erkannt' + (t ? ' („' + t + '“)' : '') +
+        ': ' + grp + ' Gruppen · ' + prak + ' Praktiken · ' + anz + ' Anforderungen');
+    } else {
+      setR('e2-struct', 'warn', 'gültiges JSON, aber Struktur catalog.groups[].groups[].controls[] nicht gefunden');
+    }
+  }
+
+  function wireFileInput() {
+    var fi = $('e2file');
+    on(fi, 'change', function () {
+      var files = null, f = null, nm = '', sz = -1, rd, done = false, to;
+      setR('e2-change', 'ok', 'change-Event ausgelöst — Auswahl kommt bei der Seite an');
+      try { files = fi.files; } catch (e) { files = null; }
+      var n = files ? files.length : 0;
+      if (!n) {
+        setR('e2-list', 'bad', 'FileList leer — Datei wurde ausgewählt, aber nicht übergeben (Richtlinie/Filter?)');
+        clearFrom('e2-meta');
+        return;
+      }
+      setR('e2-list', 'ok', n + ' Datei(en) übergeben');
+      f = files[0];
+      try { nm = f.name; sz = f.size; }
+      catch (e) {
+        setR('e2-meta', 'bad', 'Zugriff auf Name/Größe verweigert: ' + msg(e));
+        clearFrom('e2-start');
+        return;
+      }
+      setR('e2-meta', 'ok', nm + ' · ' + sz + ' Bytes');
+      if (typeof window.FileReader === 'undefined') {
+        setR('e2-start', 'bad', 'FileReader fehlt in diesem Browser');
+        clearFrom('e2-load');
+        return;
+      }
+      try { rd = new FileReader(); }
+      catch (e) {
+        setR('e2-start', 'bad', 'FileReader nicht erzeugbar: ' + msg(e));
+        clearFrom('e2-load');
+        return;
+      }
+      setR('e2-start', 'ok', 'FileReader erzeugt, Lesevorgang startet');
+      rd.onload = function () {
+        done = true;
+        if (to) { clearTimeout(to); }
+        setR('e2-load', 'ok', 'onload ausgelöst');
+        checkStructure(rd.result, nm);
+      };
+      rd.onerror = function () {
+        done = true;
+        if (to) { clearTimeout(to); }
+        var m = (rd.error && rd.error.message) ? rd.error.message : 'Lesen fehlgeschlagen';
+        setR('e2-load', 'bad', 'onerror: ' + m);
+        clearFrom('e2-content');
+      };
+      to = setTimeout(function () {
+        if (!done) {
+          setR('e2-load', 'bad', 'onload feuerte nicht innerhalb von 10 s — Einlesen blockiert');
+          clearFrom('e2-content');
+        }
+      }, 10000);
+      try { rd.readAsText(f); }
+      catch (e) {
+        if (to) { clearTimeout(to); }
+        setR('e2-load', 'bad', 'readAsText warf Fehler: ' + msg(e));
+        clearFrom('e2-content');
+        return;
+      }
+      try { fi.value = ''; } catch (e2) { }
+    });
+    on($('e2reset'), 'click', function (e) { noDef(e); resetE2(); });
+  }
+
+  // ---- Live-Test: Drag & Drop ---------------------------------------------------
+  function wireDrop() {
+    var z = $('drop');
+    on(z, 'dragover', function (e) {
+      noDef(e);
+      setR('dg-over', 'ok', 'dragover feuert — Ziel reagiert');
+      z.className = 'drop over';
+    });
+    on(z, 'dragleave', function () { z.className = 'drop'; });
+    on(z, 'drop', function (e) {
+      noDef(e);
+      z.className = 'drop';
+      setR('dg-drop', 'ok', 'drop-Ereignis ausgelöst');
+      var dt = e.dataTransfer;
+      if (!dt || !dt.files || !dt.files.length) {
+        setR('dg-files', 'bad', 'dataTransfer.files leer oder gesperrt');
+      } else {
+        setR('dg-files', 'ok', dt.files.length + ' Datei(en) lesbar — Drag&Drop funktioniert');
+      }
+    });
+    // Seite selbst nicht als Drop-Ziel navigieren lassen (wie im Viewer)
+    on(document, 'dragover', function (e) { noDef(e); });
+    on(document, 'drop', function (e) { noDef(e); });
+  }
+
+  // ---- Live-Test: Dialog --------------------------------------------------------
+  function wireAlert() {
+    on($('albtn'), 'click', function () {
+      var st = 'ok', d = '';
+      try { window.alert('Browser-Check: Dieser Dialog bestätigt, dass Hinweis-Dialoge verfügbar sind.'); }
+      catch (e) { st = 'bad'; d = 'alert warf Fehler: ' + msg(e); }
+      if (st === 'ok') {
+        d = 'alert kehrte zurück. Falls kein Dialog sichtbar war, werden Dialoge still blockiert.';
+      }
+      setR('al', st, d);
+    });
+  }
+
+  // ---- Bericht -------------------------------------------------------------------
+  function reportText() {
+    var L = [];
+    L.push('Browser-Prüfung OSCAL-Viewer (oscal-viewer.html)');
+    L.push('Erzeugt am: ' + fmtDate());
+    try { L.push('Protokoll: ' + location.protocol); } catch (e) { }
+    try { L.push('User-Agent: ' + navigator.userAgent); } catch (e) { }
+    var v = classify();
+    L.push('Gesamtergebnis: ' + (v.state === 'bad' ? 'ROT — Viewer läuft auf diesem Browser nicht'
+      : v.state === 'none' ? 'TEILWEISE — Live-Test ausstehend' : 'GRÜN — Viewer sollte funktionieren'));
+    if (v.state === 'bad') {
+      if (v.redA.length) { L.push('  Rot/Syntax (per ES5-Kopie behebbar): ' + v.redA.join('; ')); }
+      if (v.redB.length) { L.push('  Rot/Datei-Einlesen: ' + v.redB.join('; ')); }
+      if (v.redF.length) { L.push('  Rot/Verarbeitung: ' + v.redF.join('; ')); }
+    }
+    if (v.warn.length) { L.push('  Gelb/Einschränkungen: ' + v.warn.join('; ')); }
+    L.push('');
+    var i, k, ch, r, mk;
+    for (i = 0; i < SECORDER.length; i++) {
+      L.push('== ' + SECNAME[SECORDER[i]] + ' ==');
+      for (k = 0; k < CHECKS.length; k++) {
+        ch = CHECKS[k];
+        if (ch.sec !== SECORDER[i]) { continue; }
+        r = R[ch.id];
+        if (!r) { continue; }
+        mk = r.state === 'ok' ? 'GRÜN' : r.state === 'bad' ? 'ROT' : r.state === 'warn' ? 'GELB'
+          : r.state === 'info' ? 'INFO' : 'OFFEN';
+        L.push('[' + mk + '] ' + ch.name + (r.detail ? ' — ' + r.detail : ''));
+      }
+      L.push('');
+    }
+    return L.join('\n');
+  }
+
+  function wireReport() {
+    on($('repBtn'), 'click', function () {
+      $('report').value = reportText();
+      $('copyBtn').style.display = 'inline-block';
+      txt($('copyMsg'), 'Bericht erzeugt.');
+    });
+    on($('copyBtn'), 'click', function () {
+      var t = $('report').value;
+      var done = function (ok) {
+        txt($('copyMsg'), ok ? 'In die Zwischenablage kopiert.'
+          : 'Automatisches Kopieren nicht möglich — bitte Text im Feld markieren und STRG+C drücken.');
+      };
+      var used = false;
+      try {
+        if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          navigator.clipboard.writeText(t).then(function () { done(true); }, function () { fb(); });
+          used = true;
+        }
+      } catch (e) { }
+      if (!used) { fb(); }
+      function fb() {
+        var ok = false;
+        try { $('report').focus(); $('report').select(); ok = document.execCommand('copy'); }
+        catch (e) { ok = false; }
+        done(ok);
+      }
+    });
+  }
+
+  // ---- Theme (2 Zustände, wie Berichtshausstil) ------------------------------------
+  function wireTheme() {
+    var b = $('themeBtn');
+    var dark = false;
+    try { dark = localStorage.getItem('ocvcheck-theme') === 'dark'; } catch (e) { }
+    function paint() {
+      document.documentElement.className = dark ? 'dark' : '';
+      b.title = 'Farbschema umschalten (aktuell: ' + (dark ? 'dunkel' : 'hell') + ')';
+    }
+    on(b, 'click', function () {
+      dark = !dark;
+      try { localStorage.setItem('ocvcheck-theme', dark ? 'dark' : 'light'); } catch (e) { }
+      paint();
+    });
+    paint();
+  }
+
+  // ---- Selbsttest (Konsole: selftest()) ---------------------------------------------
+  window.selftest = function () {
+    var a = [], pass = 0, fail = 0;
+    function chk(n, c) { a.push((c ? 'OK   ' : 'FAIL ') + n); if (c) { pass++; } else { fail++; } }
+    chk('esc() maskiert Sonderzeichen', esc('<">&') === '&lt;&quot;&gt;&amp;');
+    chk('esc() lässt Klartext', esc('abc') === 'abc');
+    var n = 0, i;
+    for (i = 0; i < CHECKS.length; i++) { if ($('c-' + CHECKS[i].id)) { n++; } }
+    chk('alle ' + CHECKS.length + ' Zeilen gerendert (' + n + ')', n === CHECKS.length);
+    var rid = 'es5', sav = R[rid];
+    setR(rid, 'bad', 'Selbsttest-Markierung');
+    var ok1 = $('c-' + rid).className.indexOf('st-bad') >= 0 && txtGet($('d-' + rid)) === 'Selbsttest-Markierung';
+    if (sav) { setR(rid, sav.state, sav.detail); } else { setR(rid, 'ok', 'wiederhergestellt'); }
+    chk('setR() setzt Ampel und Detailtext', ok1);
+    var savR = R;
+    R = {};
+    R['c1'] = { state: 'bad' }; R['e2-load'] = { state: 'ok' };
+    var v = classify();
+    chk('classify: rot bei Syntax-Defekt', v.state === 'bad' && v.redA.length === 1);
+    R = {}; R['e2-list'] = { state: 'bad' };
+    v = classify();
+    chk('classify: rot bei Datei-Defekt', v.state === 'bad' && v.redB.length === 1);
+    R = {}; R['e2-load'] = { state: 'ok' }; R['e2-change'] = { state: 'ok' };
+    R['e2-json'] = { state: 'ok' }; R['storage'] = { state: 'warn' };
+    v = classify();
+    chk('classify: grün mit Einschränkung', v.state === 'ok' && v.warn.length === 1);
+    R = {};
+    v = classify();
+    chk('classify: ausstehend ohne Live-Test', v.state === 'none');
+    R = savR;
+    verdict();
+    chk('reportText() liefert Bericht', reportText().indexOf('Browser-Prüfung') === 0);
+    return { pass: pass, fail: fail, results: a };
+  };
+  window.diag = { R: R, classify: classify, reportText: reportText, setR: setR };
+
+  // ---- Start -----------------------------------------------------------------------
+  $('jsWarn').style.display = 'none';
+  renderRows();
+  runStatic();
+  wireFileInput();
+  wireDrop();
+  wireAlert();
+  wireReport();
+  wireTheme();
+})();
+</script>
+</body>
+</html>
